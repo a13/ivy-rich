@@ -85,6 +85,7 @@ to hold the project name."
 (defvar ivy-rich-switch-buffer-indicator-length 3)
 
 (defun ivy-rich-string-empty-p (str)
+  "Check whether trimmed STR is empty."
   (string-empty-p (string-trim str)))
 
 (defun ivy-rich-switch-buffer-pad (str len &optional left)
@@ -98,7 +99,7 @@ When LEFT is not nil, pad from left side."
     str))
 
 (defun ivy-rich-switch-buffer-user-buffer-p (buffer)
-  "Check whether BUFFER-NAME is a user buffer."
+  "Check whether BUFFER is a user buffer."
   (let ((buffer-name
          (if (stringp buffer)
              buffer
@@ -110,7 +111,7 @@ When LEFT is not nil, pad from left side."
   (not (memq major-mode modes)))
 
 (defun ivy-rich-switch-buffer-shorten-path (file len)
-  "Shorten the path of FILE.
+  "Shorten the path of FILE if it's longer than LEN.
 
 For example, a path /a/b/c/d/e/f.el will be shortened to /a/…/e/f.el."
   (if (> (length file) len)
@@ -124,7 +125,7 @@ For example, a path /a/b/c/d/e/f.el will be shortened to /a/…/e/f.el."
    (remove-if #'null columns)
    ivy-rich-switch-buffer-delimiter))
 
-(defun ivy-rich-switch-buffer-indicators ()
+(defun ivy-rich-switch-buffer-indicators (str)
   (let ((modified (if (and (buffer-modified-p)
                            (ivy-rich-switch-buffer-excluded-modes-p '(dired-mode shell-mode))
                            (ivy-rich-switch-buffer-user-buffer-p str))
@@ -151,7 +152,7 @@ For example, a path /a/b/c/d/e/f.el will be shortened to /a/…/e/f.el."
       (t (format "%d " size)))
      ivy-rich-switch-buffer-buffer-size-length t)))
 
-(defun ivy-rich-switch-buffer-buffer-name ()
+(defun ivy-rich-switch-buffer-buffer-name (str)
   (propertize
    (ivy-rich-switch-buffer-pad str ivy-rich-switch-buffer-name-max-length)
    'face
@@ -208,7 +209,7 @@ For example, a path /a/b/c/d/e/f.el will be shortened to /a/…/e/f.el."
      (ivy-rich-switch-buffer-shorten-path path path-max-length)
      path-max-length)))
 
-(defun ivy-rich-switch-buffer-virtual-buffer ()
+(defun ivy-rich-switch-buffer-virtual-buffer (str)
   (let* ((filename (file-name-nondirectory (expand-file-name str)))
          (filename (ivy-rich-switch-buffer-pad
                     filename
@@ -236,16 +237,16 @@ Currently the transformed format is
 | Buffer name | Buffer indicators | Major mode | Project | Path (Based on project root) |."
   (let ((buf (get-buffer str)))
     (cond (buf (with-current-buffer buf
-                 (let* ((indicator  (ivy-rich-switch-buffer-indicators))
+                 (let* ((indicator  (ivy-rich-switch-buffer-indicators str))
                         (size       (ivy-rich-switch-buffer-size))
-                        (buf-name   (ivy-rich-switch-buffer-buffer-name))
+                        (buf-name   (ivy-rich-switch-buffer-buffer-name str))
                         (mode       (ivy-rich-switch-buffer-major-mode))
                         (project    (ivy-rich-switch-buffer-project))
                         (path       (ivy-rich-switch-buffer-path project)))
                    (ivy-rich-switch-buffer-format `(,buf-name ,size ,indicator ,mode ,project ,path)))))
           ((and (eq ivy-virtual-abbreviate 'full)
                 ivy-rich-switch-buffer-align-virtual-buffer)
-           (ivy-rich-switch-buffer-virtual-buffer))
+           (ivy-rich-switch-buffer-virtual-buffer str))
           (t str))))
 
 (provide 'ivy-rich)
